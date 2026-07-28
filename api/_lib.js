@@ -22,6 +22,14 @@ function hasAuthConfig(){
   return !!(c.adminPassword && c.authSecret);
 }
 
+function getMissingAuthConfig(){
+  const c = config();
+  const missing = [];
+  if(!c.adminPassword) missing.push('ADMIN_PASSWORD');
+  if(!c.authSecret) missing.push('AUTH_SECRET');
+  return missing;
+}
+
 function sendJson(res, status, payload, headers = {}){
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -158,6 +166,7 @@ module.exports = {
   getState,
   hasAuthConfig,
   hasBackendConfig,
+  getMissingAuthConfig,
   isAuthed,
   readJson,
   sendJson,

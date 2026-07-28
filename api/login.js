@@ -1,4 +1,4 @@
-const { createSessionToken, hasAuthConfig, readJson, sendJson, sessionHeader } = require('./_lib');
+const { createSessionToken, getMissingAuthConfig, hasAuthConfig, readJson, sendJson, sessionHeader } = require('./_lib');
 
 module.exports = async function handler(req, res){
   if(req.method !== 'POST'){
@@ -7,7 +7,8 @@ module.exports = async function handler(req, res){
   }
 
   if(!hasAuthConfig()){
-    sendJson(res, 500, { error: 'Auth backend is not configured' });
+    const missing = getMissingAuthConfig();
+    sendJson(res, 500, { error: missing.length ? `Auth backend is not configured. Missing: ${missing.join(', ')}` : 'Auth backend is not configured' });
     return;
   }
 
