@@ -1,4 +1,4 @@
-const { getState, hasBackendConfig, isAuthed, sendJson, setState, readJson } = require('./_lib');
+const { getMissingBackendConfig, getState, hasBackendConfig, isAuthed, sendJson, setState, readJson } = require('./_lib');
 
 module.exports = async function handler(req, res){
   if(req.method === 'GET'){
@@ -17,7 +17,8 @@ module.exports = async function handler(req, res){
       return;
     }
     if(!hasBackendConfig()){
-      sendJson(res, 500, { error: 'Storage backend is not configured' });
+      const missing = getMissingBackendConfig();
+      sendJson(res, 500, { error: missing.length ? `Storage backend is not configured. Missing: ${missing.join(', ')}` : 'Storage backend is not configured' });
       return;
     }
     try{

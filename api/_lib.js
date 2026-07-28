@@ -17,6 +17,14 @@ function hasBackendConfig(){
   return !!(c.redisUrl && c.redisToken);
 }
 
+function getMissingBackendConfig(){
+  const c = config();
+  const missing = [];
+  if(!c.redisUrl) missing.push('UPSTASH_REDIS_REST_URL');
+  if(!c.redisToken) missing.push('UPSTASH_REDIS_REST_TOKEN');
+  return missing;
+}
+
 function hasAuthConfig(){
   const c = config();
   return !!(c.adminPassword && c.authSecret);
@@ -167,6 +175,7 @@ async function setState(state){
 module.exports = {
   clearSessionHeader,
   createSessionToken,
+  getMissingBackendConfig,
   getState,
   hasAuthConfig,
   hasBackendConfig,

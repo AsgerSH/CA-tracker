@@ -360,7 +360,11 @@ const gm = [
 async function loadState(){
   try{
     const r = await fetch('/api/state', {cache:'no-store'});
-    if(!r.ok) throw new Error('state endpoint returned ' + r.status);
+    if(!r.ok){
+      let body = '';
+      try{ body = await r.text(); }catch(e){ /* ignore */ }
+      throw new Error(body ? body : 'state endpoint returned ' + r.status);
+    }
     const data = await r.json();
     const incoming = data && data.state ? data.state : data;
     if(incoming && typeof incoming === 'object') state = incoming;
@@ -384,7 +388,11 @@ async function saveState(){
       showBackendWarning('Editing is locked. Log in again to save changes.');
       return;
     }
-    if(!r.ok) throw new Error('save endpoint returned ' + r.status);
+    if(!r.ok){
+      let body = '';
+      try{ body = await r.text(); }catch(e){ /* ignore */ }
+      throw new Error(body ? body : 'save endpoint returned ' + r.status);
+    }
     hideBackendWarning();
   }catch(e){
     showBackendWarning('Could not save progress right now (' + e.message + '). Check your backend configuration.');
