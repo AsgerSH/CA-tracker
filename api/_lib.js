@@ -122,22 +122,26 @@ function clearSessionHeader(){
 async function redisRequest(command, args = [], options = {}){
   const { redisUrl, redisToken } = config();
   if(!redisUrl || !redisToken) throw new Error('Redis backend is not configured');
-  let url = `${redisUrl}/${command}`;
-  const method = options.method || (command === 'get' ? 'GET' : 'POST');
+  const method = options.method || 'POST';
   const headers = { Authorization: `Bearer ${redisToken}` };
   const init = { method, headers };
-  if(command === 'set' && args.length >= 2){
-    const [key, value, ...rest] = args;
-    const suffix = rest.length ? '/' + rest.map(part => encodeURIComponent(String(part))).join('/') : '';
-    url = `${redisUrl}/set/${encodeURIComponent(String(key))}${suffix}`;
-    init.body = value;
-    headers['Content-Type'] = 'text/plain; charset=utf-8';
-  }else if(args.length){
-    url = `${redisUrl}/${command}/${args.map(part => encodeURIComponent(String(part))).join('/')}`;
+  if(method === 'GET'){
+    const url = `${redisUrl}/${command}/${args.map(part => encodeURIComponent(String(part))).join('/')}`;
+    const response = await fetch(url, init);
+    const text = await response.text();
+    let data = null;
+    try{ data = text ? JSON.parse(text) : null; }catch(error){ /* ignore */ }
+    if(!response.ok || (data && data.error)) throw new Error((data && data.error) || text || `Upstash ${response.status}`);
+    return data ? data.result : null;
   }
-  const response = await fetch(url, init);
-  const data = await response.json();
-  if(!response.ok || data.error) throw new Error(data.error || `Upstash ${response.status}`);
+
+  init.headers['Content-Type'] = 'application/json';
+  init.body = JSON.stringify([command.toUpperCase(), ...args.map(part => String(part))]);
+  const response = await fetch(redisUrl, init);
+  const text = await response.text();
+  let data = null;
+  try{ data = text ? JSON.parse(text) : null; }catch(error){ /* ignore */ }
+  if(!response.ok || (data && data.error)) throw new Error((data && data.error) || text || `Upstash ${response.status}`);
   return data.result;
 }
 
